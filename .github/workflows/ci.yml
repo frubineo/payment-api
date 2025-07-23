@@ -1,0 +1,56 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Detect project type
+      id: detect
+      run: |
+        if [ -f "composer.json" ]; then
+          echo "type=php" >> $GITHUB_OUTPUT
+        elif [ -f "package.json" ]; then
+          echo "type=node" >> $GITHUB_OUTPUT
+        else
+          echo "type=unknown" >> $GITHUB_OUTPUT
+        fi
+    
+    - name: Setup PHP
+      if: steps.detect.outputs.type == 'php'
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.2'
+        
+    - name: Install PHP dependencies
+      if: steps.detect.outputs.type == 'php'
+      run: composer install --prefer-dist --no-progress
+        
+    - name: Setup Node.js
+      if: steps.detect.outputs.type == 'node'
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+        
+    - name: Install Node dependencies
+      if: steps.detect.outputs.type == 'node'
+      run: npm ci
+        
+    - name: Run tests
+      run: |
+        echo "Tests would run here"
+        
+    - name: Notify Git-Sync
+      if: always()
+      run: |
+        curl -X POST http://your-webhook-url:8080/build-status \
+          -H "Content-Type: application/json" \
+          -d '{"repo":"${{ github.repository }}","status":"${{ job.status }}"}'
