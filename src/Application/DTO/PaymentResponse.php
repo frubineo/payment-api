@@ -251,7 +251,7 @@ final class PaymentResponse
     /**
      * Vérifie si une action utilisateur est requise
      */
-    public function requiresAction(): bool
+    public function requiresUserAction(): bool
     {
         return $this->status === self::STATUS_REQUIRES_ACTION;
     }
@@ -400,7 +400,7 @@ final class PaymentResponse
             'status' => $this->status,
             'transaction_id' => $this->transactionId,
             'success' => $this->isSuccessful(),
-            'requires_action' => $this->requiresAction(),
+            'requires_action' => $this->requiresUserAction(),
             'fraud_detected' => $this->isFraudDetected(),
             'http_status' => $this->getHttpStatusCode()
         ];
